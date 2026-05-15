@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voucha — Settle with Squad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+  :root {
+    --paper-1: #FFFFFF;
+    --paper-2: #F8F9FB;
+    --paper-3: #EEF1F5;
+    --ink: #0A0E1A;
+    --ink-2: #1F2937;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --border: #E5E7EB;
+    --gold: #C8941D;
+    --gold-2: #E5B547;
+    --cobalt: #1E3A8A;
+    --cobalt-2: #2F4DBD;
+    --emerald: #047857;
+    --font-display: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+    --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: var(--font-sans); color: var(--ink); height: 100%; overflow: hidden; }
+  a { color: inherit; text-decoration: none; }
+  @keyframes rotateBorder { to { --angle: 360deg; } }
+
+  /* BACKDROP — verifier dashboard, blurred */
+  .backdrop {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 25% 10%, rgba(200, 148, 29, 0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(47, 77, 189, 0.05), transparent 60%),
+      linear-gradient(180deg, #FFFFFF 0%, #F2F4F7 100%);
+    filter: blur(8px) saturate(0.85);
+    transform: scale(1.04);
+    z-index: 0;
+  }
+  .backdrop-content {
+    position: fixed; inset: 0; z-index: 1; padding: 32px 40px;
+    filter: blur(8px) saturate(0.7);
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .bd-row { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .bd-title { font-family: var(--font-display); font-size: 48px; line-height: 1; }
+  .bd-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px; }
+  .bd-card { background: var(--paper-1); border: 1px solid var(--border); border-radius: 14px; padding: 22px; height: 130px; }
+  .bd-table { background: var(--paper-1); border: 1px solid var(--border); border-radius: 14px; padding: 24px; height: 360px; }
+
+  /* SCRIM */
+  .scrim {
+    position: fixed; inset: 0; z-index: 5;
+    background: radial-gradient(ellipse at center, rgba(10, 14, 26, 0.42), rgba(10, 14, 26, 0.62));
+    backdrop-filter: blur(2px);
+  }
+
+  /* MODAL CONTAINER */
+  .modal-wrap {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; place-items: center; padding: 24px;
+    animation: rise 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .modal {
+    position: relative;
+    width: 480px; max-width: 100%; max-height: calc(100vh - 48px);
+    border-radius: 24px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248, 249, 251, 0.88) 100%);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    box-shadow:
+      0 50px 90px -30px rgba(15, 23, 42, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .modal::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: conic-gradient(from var(--angle), var(--gold) 0deg, transparent 90deg, transparent 180deg, var(--cobalt) 270deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: rotateBorder 12s linear infinite;
+    pointer-events: none; opacity: 0.7;
+  }
+
+  .modal-head {
+    padding: 22px 26px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-size: 20px; }
+  .logo-mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--cobalt) 70%, var(--gold) 100%);
+  }
+  .close {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.6); cursor: pointer;
+    display: grid; place-items: center; color: var(--muted);
+    transition: all .15s;
+  }
+  .close:hover { color: var(--ink); background: #fff; }
+
+  .modal-body { padding: 28px 26px; overflow-y: auto; flex: 1; }
+
+  .squad-row {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .squad-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 9px; background: rgba(15, 23, 42, 0.06); border-radius: 999px;
+    color: var(--ink); letter-spacing: 0.1em;
+  }
+  .squad-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+
+  h1.modal-title {
+    font-family: var(--font-display); font-size: 38px; font-weight: 400;
+    line-height: 1.0; letter-spacing: -0.025em; margin-bottom: 8px;
+  }
+  h1.modal-title em { font-style: italic; color: var(--cobalt); }
+  .modal-lede { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin-bottom: 22px; }
+
+  /* DOCUMENT REF */
+  .doc-ref {
+    display: flex; gap: 14px; padding: 14px;
+    background: rgba(255,255,255,0.62);
+    border: 1px solid rgba(15, 23, 42, 0.06); border-radius: 12px;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .doc-thumb {
+    width: 46px; height: 60px; border-radius: 5px; flex-shrink: 0;
+    background: linear-gradient(180deg, #FFF 0%, #EEF1F5 100%);
+    border: 1px solid var(--border); position: relative;
+  }
+  .doc-thumb::after {
+    content: ''; position: absolute; inset: 8px 8px auto 8px; height: 4px; background: var(--ink); opacity: 0.7;
+  }
+  .doc-thumb::before {
+    content: 'A. O.'; position: absolute; bottom: 6px; left: 8px; font-family: var(--font-display); font-style: italic; font-size: 11px; color: var(--cobalt);
+  }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-info b { display: block; font-family: var(--font-sans); font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .doc-info span { font-family: var(--font-mono); font-size: 11px; color: var(--muted); display: block; line-height: 1.4; }
+  .doc-score {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; color: var(--muted);
+    padding-left: 12px; border-left: 1px dashed rgba(15, 23, 42, 0.12);
+  }
+  .doc-score b { font-family: var(--font-display); font-size: 28px; color: var(--ink); font-weight: 400; letter-spacing: -0.02em; margin-bottom: 3px; }
+
+  /* PRICE */
+  .price-block {
+    padding: 22px 0; border-top: 1px solid rgba(15,23,42,0.08); border-bottom: 1px solid rgba(15,23,42,0.08);
+    margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .price-amount {
+    font-family: var(--font-display); font-size: 64px; line-height: 0.95; letter-spacing: -0.03em;
+  }
+  .price-amount sup { font-size: 24px; vertical-align: super; opacity: 0.55; margin-right: 2px; }
+  .price-meta { text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+  .price-meta b { display: block; color: var(--ink); font-size: 14px; font-family: var(--font-sans); margin-bottom: 4px; }
+
+  /* TRANSPARENCY */
+  .transparency-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .transparency-head .label {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .transparency-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+    padding: 3px 9px; background: rgba(4, 120, 87, 0.12); color: var(--emerald);
+    border-radius: 999px;
+  }
+  .fee-bar {
+    height: 10px; border-radius: 5px; display: flex; overflow: hidden; margin-bottom: 12px;
+    background: var(--paper-3);
+  }
+  .fee-bar span { height: 100%; }
+  .fee-infra { width: 32%; background: var(--cobalt-2); }
+  .fee-inst { width: 68%; background: var(--gold); }
+  .fee-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+  .fee-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; gap: 12px; }
+  .fee-row .lbl { display: flex; align-items: center; gap: 8px; color: var(--ink-2); flex-wrap: wrap; }
+  .fee-row .lbl .sq { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .fee-row .lbl .sq.infra { background: var(--cobalt-2); }
+  .fee-row .lbl .sq.inst { background: var(--gold); }
+  .fee-row .lbl small { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+  .fee-row b { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink); font-weight: 500; white-space: nowrap; }
+
+  /* METHOD */
+  .method-block { margin-bottom: 18px; }
+  .method-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .method {
+    padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.1);
+    background: rgba(255,255,255,0.55); cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all .15s;
+  }
+  .method.active { border-color: var(--ink); background: var(--ink); color: #fff; }
+  .method.active .m-tag { color: rgba(255,255,255,0.65); }
+  .method .m-icon { width: 28px; height: 20px; border-radius: 3px; background: var(--paper-3); display: grid; place-items: center; font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.04em; }
+  .method.active .m-icon { background: rgba(255,255,255,0.18); color: #fff; }
+  .method .m-body b { display: block; font-size: 12.5px; font-weight: 500; }
+  .method .m-body .m-tag { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.04em; }
+
+  /* CTA */
+  .cta-btn {
+    position: relative; width: 100%; padding: 18px 22px;
+    background: var(--ink); color: #fff;
+    border: none; border-radius: 14px;
+    font-family: var(--font-sans); font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all .25s;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    overflow: hidden;
+  }
+  .cta-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent 25%, rgba(229, 181, 71, 0.45) 50%, transparent 75%);
+    transform: translateX(-100%); transition: transform .9s ease;
+  }
+  .cta-btn:hover::before { transform: translateX(100%); }
+  .cta-btn:active { transform: scale(0.985); }
+  .cta-btn .arrow { font-family: var(--font-mono); }
+  .cta-btn small {
+    font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.65); letter-spacing: 0.06em;
+  }
+
+  .modal-foot {
+    padding: 14px 26px; border-top: 1px solid rgba(15,23,42,0.08);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); letter-spacing: 0.06em;
+    background: rgba(255,255,255,0.4);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .modal-foot .secure { display: flex; align-items: center; gap: 6px; }
+  .modal-foot .secure svg { width: 11px; height: 11px; }
+
+  /* SUCCESS */
+  .modal.success .body-pay { display: none; }
+  .modal:not(.success) .body-success { display: none; }
+  .body-success {
+    text-align: center; padding: 12px 6px 4px;
+    animation: bodyFade .4s ease;
+  }
+  @keyframes bodyFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .success-stamp {
+    width: 140px; height: 140px; margin: 0 auto 18px; position: relative;
+    animation: stamp 0.9s cubic-bezier(0.2, 1.7, 0.4, 1);
+  }
+  @keyframes stamp {
+    0% { transform: scale(3) rotate(8deg); opacity: 0; }
+    50% { transform: scale(0.9) rotate(-3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+  }
+  .success-stamp svg { width: 100%; height: 100%; }
+  h2.success-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; letter-spacing: -0.022em; line-height: 1.05; margin-bottom: 8px; }
+  h2.success-title em { font-style: italic; color: var(--gold); }
+  .success-lede { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin-bottom: 22px; }
+  .receipt {
+    background: rgba(255,255,255,0.6); border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: left;
+  }
+  .receipt .rrow { display: flex; justify-content: space-between; padding: 8px 0; font-size: 12.5px; gap: 10px; }
+  .receipt .rrow + .rrow { border-top: 1px dashed rgba(15,23,42,0.1); }
+  .receipt .rrow span { color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; }
+  .receipt .rrow b { font-family: var(--font-mono); font-size: 12px; color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 540px) {
+    .modal { width: 100%; max-height: calc(100vh - 24px); }
+    .modal-body { padding: 22px 18px; }
+    .modal-head { padding: 18px 20px; }
+    h1.modal-title { font-size: 30px; }
+    .price-amount { font-size: 48px; }
+    .method-grid { grid-template-columns: 1fr; }
+    .backdrop-content { padding: 16px; }
+    .bd-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="backdrop"></div>
+<div class="backdrop-content">
+  <div class="bd-row">
+    <div class="bd-title">Today, 23 verifications</div>
+    <div style="font-family: var(--font-mono); font-size: 12px; color: var(--muted);">14 May · 14:22</div>
+  </div>
+  <div class="bd-cards">
+    <div class="bd-card"></div><div class="bd-card"></div><div class="bd-card"></div><div class="bd-card"></div>
+  </div>
+  <div class="bd-table"></div>
+</div>
+
+<div class="scrim"></div>
+
+<div class="modal-wrap">
+  <div class="modal" id="modal">
+
+    <div class="modal-head">
+      <a class="logo" href="index.html"><div class="logo-mark"></div><span>Voucha</span></a>
+      <button class="close" onclick="window.location.href='trust-score.html'">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="body-pay">
+        <div class="squad-row">
+          <span class="squad-pill"><span class="dot"></span>SQUAD · LIVE</span>
+          <span>SECURE SETTLEMENT</span>
+        </div>
+
+        <h1 class="modal-title">Verify with <em>Squad</em>.</h1>
+        <p class="modal-lede">Voucha uses Squad's split-payment rails to route your verification fee directly to the source institution — no escrow, no middlemen, no manual reconciliation.</p>
+
+        <div class="doc-ref">
+          <div class="doc-thumb"></div>
+          <div class="doc-info">
+            <b>UNILAG B.Sc. Computer Science</b>
+            <span>Adaeze Okonkwo · matric 149074</span>
+            <span>VCH-7B8A-91CF · verified 14:22</span>
+          </div>
+          <div class="doc-score">
+            <b>94</b>
+            VERIFIED
+          </div>
+        </div>
+
+        <div class="price-block">
+          <div class="price-amount"><sup>₦</sup>1,250.00</div>
+          <div class="price-meta">
+            <b>Single document</b>
+            includes audit log<br>+ Voucha seal
+          </div>
+        </div>
+
+        <div class="transparency-head">
+          <span class="label">Fee transparency</span>
+          <span class="transparency-badge">✓ Auditable</span>
+        </div>
+        <div class="fee-bar"><span class="fee-infra"></span><span class="fee-inst"></span></div>
+        <div class="fee-list">
+          <div class="fee-row">
+            <span class="lbl"><span class="sq infra"></span>Infrastructure <small>· AI, storage, settlement</small></span>
+            <b>₦400 · 32%</b>
+          </div>
+          <div class="fee-row">
+            <span class="lbl"><span class="sq inst"></span>UNILAG Registrar <small>· verification source</small></span>
+            <b>₦850 · 68%</b>
+          </div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-label">Payment method</div>
+          <div class="method-grid">
+            <div class="method active" data-method="card">
+              <div class="m-icon">**</div>
+              <div class="m-body">
+                <b>Card</b>
+                <span class="m-tag">Mastercard ·· 4029</span>
+              </div>
+            </div>
+            <div class="method" data-method="bank">
+              <div class="m-icon">↔</div>
+              <div class="m-body">
+                <b>Bank transfer</b>
+                <span class="m-tag">USSD or web</span>
+              </div>
+            </div>
+            <div class="method" data-method="wallet">
+              <div class="m-icon">●</div>
+              <div class="m-body">
+                <b>Voucha credit</b>
+                <span class="m-tag">₦18,400 left</span>
+              </div>
+            </div>
+            <div class="method" data-method="ussd">
+              <div class="m-icon">#</div>
+              <div class="m-body">
+                <b>USSD</b>
+                <span class="m-tag">*270# Squad</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta-btn" id="cta">
+          <span>One-tap verify · ₦1,250</span>
+          <small class="arrow">→</small>
+        </button>
+      </div>
+
+      <div class="body-success">
+        <div class="success-stamp">
+          <svg viewBox="0 0 140 140">
+            <defs>
+              <path id="circle-text" d="M 70 70 m -56 0 a 56 56 0 1 1 112 0 a 56 56 0 1 1 -112 0" fill="none"/>
+            </defs>
+            <circle cx="70" cy="70" r="64" fill="none" stroke="var(--gold)" stroke-width="1.5"/>
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--gold)" stroke-width="0.8" stroke-dasharray="2 2"/>
+            <text font-family="Geist Mono" font-size="8" fill="var(--gold)" letter-spacing="4">
+              <textPath href="#circle-text" startOffset="0">· VOUCHA · NOTARISED · VOUCHA · NOTARISED ·</textPath>
+            </text>
+            <g transform="translate(70, 64)">
+              <path d="M -18 0 L -5 14 L 18 -14" stroke="var(--gold)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <text x="70" y="100" font-family="Instrument Serif" font-size="13" fill="var(--gold)" text-anchor="middle" font-style="italic">94 / 100</text>
+          </svg>
+        </div>
+        <h2 class="success-title">Settled. <em>Notarised</em>.</h2>
+        <p class="success-lede">Your Voucha seal is now affixed to this verdict. The audit log is sealed and retained for seven years.</p>
+
+        <div class="receipt">
+          <div class="rrow"><span>SQUAD TX</span><b>SQ-9F47B-21A0</b></div>
+          <div class="rrow"><span>AMOUNT</span><b>₦1,250.00</b></div>
+          <div class="rrow"><span>SPLIT · INFRA</span><b>₦400.00</b></div>
+          <div class="rrow"><span>SPLIT · UNILAG</span><b>₦850.00</b></div>
+          <div class="rrow"><span>SETTLED IN</span><b>0.84s</b></div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="cta-btn" style="background: var(--gold); color: var(--ink);" onclick="window.location.href='dashboard.html'">
+            <span>Back to dashboard</span>
+            <small class="arrow" style="color: rgba(10,14,26,0.6);">→</small>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-foot">
+      <div class="secure">
+        <svg viewBox="0 0 12 12" fill="none"><path d="M6 1 L1 3 V6 C1 8.5 3 10.5 6 11 C9 10.5 11 8.5 11 6 V3 Z" stroke="currentColor" stroke-width="0.8"/></svg>
+        AES-256 · NDPR · PCI-DSS
+      </div>
+      <span>Powered by <b style="color: var(--ink); font-weight: 500;">Squad</b> · payments@squadco.com</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.method').forEach(m => {
+    m.addEventListener('click', () => {
+      document.querySelectorAll('.method').forEach(x => x.classList.remove('active'));
+      m.classList.add('active');
+    });
+  });
+
+  const cta = document.getElementById('cta');
+  cta.addEventListener('click', () => {
+    cta.disabled = true;
+    cta.style.transform = 'scale(0.97)';
+    cta.innerHTML = '<span>Processing with Squad…</span><small class="arrow">⌛</small>';
+    setTimeout(() => {
+      document.getElementById('modal').classList.add('success');
+    }, 1100);
+  });
+</script>
+</body>
+</html>

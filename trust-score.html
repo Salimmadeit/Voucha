@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voucha — Trust score · Moment of truth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+  :root {
+    --paper-1: #FFFFFF;
+    --paper-2: #F8F9FB;
+    --paper-3: #EEF1F5;
+    --ink: #0A0E1A;
+    --ink-2: #1F2937;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --border: #E5E7EB;
+    --gold: #C8941D;
+    --gold-2: #E5B547;
+    --cobalt: #1E3A8A;
+    --cobalt-2: #2F4DBD;
+    --cobalt-3: #4F6FE2;
+    --emerald: #047857;
+    --warn: #D97706;
+    --danger: #B91C1C;
+    --accent: var(--gold);
+    --accent-2: var(--gold-2);
+    --font-display: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+    --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  body.cobalt { --accent: var(--cobalt-2); --accent-2: var(--cobalt-3); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: var(--font-sans); color: var(--ink); }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 60% 60% at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 65%),
+      linear-gradient(180deg, #FFFFFF 0%, #F2F4F7 100%);
+    transition: background 0.6s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+  @keyframes rotateBorder { to { --angle: 360deg; } }
+
+  /* TOP BAR */
+  .top {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-inner {
+    max-width: 1320px; margin: 0 auto; padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  }
+  .crumbs { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); letter-spacing: 0.06em; }
+  .crumbs a { color: var(--muted); }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs span.sep { opacity: 0.4; }
+  .crumbs b { color: var(--ink); font-weight: 500; }
+  .logo { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-size: 20px; }
+  .logo-mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--cobalt) 70%, var(--gold) 100%);
+  }
+  .top-actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--paper-1); color: var(--ink); transition: all .2s; font-family: var(--font-sans);
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--paper-2); }
+  .btn.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn.dark:hover { background: var(--cobalt); }
+
+  /* PAGE */
+  .page { max-width: 1320px; margin: 0 auto; padding: 36px 32px 80px; }
+
+  .head {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;
+    padding-bottom: 28px; border-bottom: 1px solid var(--border); margin-bottom: 36px; flex-wrap: wrap;
+  }
+  .head-left .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .head-left h1 { font-family: var(--font-display); font-size: clamp(40px, 5vw, 60px); font-weight: 400; line-height: 1.0; letter-spacing: -0.022em; }
+  .head-left h1 .a { font-style: italic; color: var(--accent); }
+  .head-meta {
+    display: flex; gap: 36px; flex-wrap: wrap;
+  }
+  .head-meta-item { font-family: var(--font-mono); font-size: 11px; }
+  .head-meta-item b { display: block; color: var(--muted); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .head-meta-item span { color: var(--ink); font-size: 14px; font-family: var(--font-sans); }
+
+  /* MAIN GRID */
+  .layout { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 28px; }
+  .col-left { display: flex; flex-direction: column; gap: 20px; }
+  .col-right { display: flex; flex-direction: column; gap: 20px; }
+
+  /* DIAL CARD */
+  .dial-card {
+    position: relative; background: var(--paper-1); border-radius: 22px;
+    overflow: hidden; padding: 1px;
+  }
+  .dial-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: conic-gradient(from var(--angle), var(--accent) 0deg, transparent 90deg, transparent 180deg, var(--cobalt) 270deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: rotateBorder 9s linear infinite;
+    pointer-events: none;
+  }
+  .dial-inner {
+    position: relative; background: var(--paper-1); border-radius: 21px;
+    padding: 40px 40px 36px; z-index: 1;
+  }
+  .dial-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .dial-head .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+
+  .accent-toggle {
+    display: inline-flex; gap: 3px; padding: 4px; background: var(--paper-2); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .accent-toggle button {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 7px 12px; border-radius: 7px; border: none; background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .accent-toggle button.active { background: var(--ink); color: #fff; }
+  .accent-toggle .swatch { width: 10px; height: 10px; border-radius: 50%; }
+  .accent-toggle .swatch.gold { background: var(--gold); }
+  .accent-toggle .swatch.cobalt { background: var(--cobalt-2); }
+
+  .dial-body { display: flex; flex-direction: column; align-items: center; padding: 14px 0 20px; }
+  .dial-svg { width: 340px; max-width: 100%; height: auto; aspect-ratio: 1; }
+  .dial-track { stroke: var(--paper-3); }
+  .dial-fill {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 0 1000;
+    animation: dialFill 2.2s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+  @keyframes dialFill { to { stroke-dasharray: 875 1000; } }
+  .dial-verdict {
+    margin-top: 16px;
+    font-family: var(--font-display); font-style: italic; font-size: 28px; line-height: 1.2; text-align: center; color: var(--ink);
+  }
+  .dial-verdict em { color: var(--accent); font-style: normal; font-family: var(--font-display); }
+  .dial-stamp {
+    position: absolute; right: 32px; bottom: 32px; width: 110px; height: 110px;
+    pointer-events: none;
+    animation: stampIn 0.9s cubic-bezier(0.2, 1.6, 0.4, 1) 1.6s both;
+  }
+  @keyframes stampIn {
+    0% { opacity: 0; transform: scale(2.4) rotate(8deg); }
+    60% { opacity: 1; transform: scale(0.92) rotate(-3deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-2deg); }
+  }
+
+  .dial-foot {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+    padding-top: 24px; border-top: 1px dashed var(--border);
+  }
+  .df-item { font-family: var(--font-mono); font-size: 10.5px; }
+  .df-item b { display: block; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; margin-bottom: 5px; }
+  .df-item span { color: var(--ink); font-size: 14px; font-family: var(--font-sans); }
+  .df-item .ok { color: var(--emerald); }
+  .df-item .warn { color: var(--warn); }
+
+  /* CARDS GENERIC */
+  .card {
+    background: var(--paper-1); border: 1px solid var(--border); border-radius: 18px;
+    padding: 26px; position: relative; overflow: hidden;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .card-head h2 { font-family: var(--font-display); font-size: 24px; font-weight: 400; letter-spacing: -0.01em; }
+  .card-head h2 em { font-style: italic; color: var(--accent); }
+  .card-head .badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; color: var(--muted); }
+
+  /* DOCUMENT PREVIEW */
+  .doc-preview-wrap {
+    position: relative; aspect-ratio: 5/6; background: linear-gradient(180deg, #FFFFFF 0%, #F4F6F9 100%);
+    border-radius: 12px; border: 1px solid var(--border); overflow: hidden;
+  }
+  .doc-paper {
+    position: absolute; inset: 28px; background: #fff; border-radius: 6px;
+    box-shadow: 0 14px 32px -16px rgba(15,23,42,0.18);
+    padding: 30px 32px; display: flex; flex-direction: column;
+    font-family: var(--font-display);
+  }
+  .doc-paper .dp-head { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .doc-paper .dp-title { font-size: 26px; margin: 20px 0 6px; line-height: 1.15; font-weight: 400; }
+  .doc-paper .dp-name { font-style: italic; font-size: 38px; color: var(--cobalt); margin-bottom: 22px; line-height: 1.0; }
+  .doc-paper .dp-body { font-size: 11.5px; line-height: 1.6; color: var(--ink-2); font-family: var(--font-sans); }
+  .doc-paper .dp-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 18px; }
+  .doc-paper .dp-field { font-family: var(--font-sans); font-size: 10px; }
+  .doc-paper .dp-field b { display: block; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; font-family: var(--font-mono); font-size: 8.5px; font-weight: 500; }
+  .doc-paper .dp-foot { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .doc-seal {
+    position: absolute; right: 22px; bottom: 60px; width: 80px; height: 80px; border-radius: 50%;
+    background: radial-gradient(circle at center, var(--gold) 0%, var(--gold) 48%, transparent 50%);
+    opacity: 0.35;
+  }
+
+  /* ANOMALY OVERLAYS */
+  .overlay {
+    position: absolute; border-radius: 8px; cursor: pointer;
+    box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.55), 0 0 24px rgba(217, 119, 6, 0.4);
+    background: rgba(217, 119, 6, 0.08);
+    transition: all .25s;
+  }
+  .overlay.ok { box-shadow: 0 0 0 2px rgba(4, 120, 87, 0.6), 0 0 24px rgba(4, 120, 87, 0.4); background: rgba(4, 120, 87, 0.08); }
+  .overlay.danger { box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.6), 0 0 24px rgba(185, 28, 28, 0.4); background: rgba(185, 28, 28, 0.08); }
+  .overlay::after {
+    content: attr(data-id); position: absolute; top: -10px; left: -10px; width: 22px; height: 22px;
+    background: var(--warn); color: #fff; border-radius: 50%; font-family: var(--font-mono); font-size: 11px;
+    display: flex; align-items: center; justify-content: center; font-weight: 500;
+  }
+  .overlay.ok::after { background: var(--emerald); }
+  .overlay.danger::after { background: var(--danger); }
+  .overlay:hover { transform: scale(1.04); }
+  .overlay.active { transform: scale(1.04); }
+
+  .reasoning-list { display: flex; flex-direction: column; gap: 12px; }
+  .reasoning {
+    display: flex; gap: 14px; padding: 14px; border-radius: 10px;
+    background: var(--paper-2); border: 1px solid var(--border);
+    cursor: pointer; transition: all .2s;
+  }
+  .reasoning:hover, .reasoning.active { border-color: var(--ink); background: var(--paper-1); }
+  .reasoning .r-num {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--warn); color: #fff; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  }
+  .reasoning.ok .r-num { background: var(--emerald); }
+  .reasoning.danger .r-num { background: var(--danger); }
+  .reasoning .r-body { flex: 1; }
+  .reasoning .r-title { font-size: 13.5px; font-weight: 500; line-height: 1.4; margin-bottom: 4px; }
+  .reasoning .r-detail { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .reasoning .r-meta { display: flex; gap: 12px; margin-top: 8px; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); flex-wrap: wrap; }
+  .reasoning .r-meta b { color: var(--ink); font-weight: 500; }
+
+  /* MARKET CONTEXT */
+  .market-chart {
+    height: 160px; width: 100%; margin-top: 14px; position: relative;
+  }
+  .market-chart svg { width: 100%; height: 100%; }
+  .mk-grid { stroke: var(--border); stroke-dasharray: 2 4; }
+  .mk-band { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .mk-line { stroke: var(--accent); fill: none; stroke-width: 1.5; }
+  .mk-mean { stroke: var(--muted-2); stroke-dasharray: 4 4; stroke-width: 1; }
+  .mk-dot { fill: var(--ink); }
+  .market-meta {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    padding-top: 18px; border-top: 1px dashed var(--border); margin-top: 14px;
+  }
+  .mm-item { font-family: var(--font-mono); font-size: 10px; }
+  .mm-item b { display: block; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .mm-item span { color: var(--ink); font-size: 14px; font-family: var(--font-sans); }
+  .mm-item span.ok { color: var(--emerald); }
+
+  /* ACTIONS BAR */
+  .actions {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .action-prim {
+    flex: 1; padding: 14px 18px; background: var(--ink); color: #fff;
+    border-radius: 10px; border: none; font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+    display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    text-decoration: none;
+  }
+  .action-prim:hover { background: var(--cobalt); }
+  .action-prim small { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.7); }
+
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .dial-foot { grid-template-columns: repeat(2, 1fr); }
+    .market-meta { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .page { padding: 24px 16px 60px; }
+    .top-inner { padding: 14px 16px; }
+    .dial-inner { padding: 24px; }
+    .dial-stamp { display: none; }
+    .head-meta { gap: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div style="display:flex; align-items:center; gap: 22px;">
+      <a class="logo" href="index.html"><div class="logo-mark"></div><span>Voucha</span></a>
+      <div class="crumbs">
+        <a href="dashboard.html">Workspace</a>
+        <span class="sep">/</span>
+        <a href="upload.html">Verifications</a>
+        <span class="sep">/</span>
+        <b>VCH-7B8A-91CF</b>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn">Share verdict</button>
+      <button class="btn">Export PDF</button>
+      <a class="btn dark" href="settlement.html">Issue Voucha seal →</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="head">
+    <div class="head-left">
+      <div class="eyebrow">Verdict · live</div>
+      <h1>The dial has <span class="a">settled</span>.</h1>
+    </div>
+    <div class="head-meta">
+      <div class="head-meta-item"><b>Document</b><span>UNILAG B.Sc. CSC · 2023</span></div>
+      <div class="head-meta-item"><b>Subject</b><span>Adaeze Okonkwo</span></div>
+      <div class="head-meta-item"><b>Verified at</b><span>14 May, 14:22 GMT+1</span></div>
+      <div class="head-meta-item"><b>Verdict ID</b><span>VCH-7B8A-91CF</span></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="dial-card">
+        <div class="dial-inner">
+          <div class="dial-head">
+            <div class="eyebrow">Integrity dial · 0 → 100</div>
+            <div class="accent-toggle" id="accent-toggle">
+              <button class="active" data-mode="gold"><span class="swatch gold"></span>Liquid gold</button>
+              <button data-mode="cobalt"><span class="swatch cobalt"></span>Deep cobalt</button>
+            </div>
+          </div>
+
+          <div class="dial-body">
+            <svg class="dial-svg" viewBox="0 0 360 360">
+              <circle class="dial-track" cx="180" cy="180" r="148" fill="none" stroke-width="24"/>
+              <circle class="dial-fill" cx="180" cy="180" r="148" fill="none" stroke-width="24" transform="rotate(-90 180 180)"/>
+              <text x="180" y="206" text-anchor="middle" font-family="Instrument Serif" font-size="132" fill="#0A0E1A" letter-spacing="-3">94</text>
+              <text x="180" y="244" text-anchor="middle" font-family="Geist Mono" font-size="10.5" fill="#6B7280" letter-spacing="6">INTEGRITY · 100</text>
+            </svg>
+
+            <div class="dial-verdict">Verified. <em>One anomaly</em><br>recorded for review.</div>
+          </div>
+
+          <div class="dial-stamp">
+            <svg viewBox="0 0 110 110">
+              <defs>
+                <path id="circle-path" d="M 55 55 m -42 0 a 42 42 0 1 1 84 0 a 42 42 0 1 1 -84 0" fill="none"/>
+              </defs>
+              <circle cx="55" cy="55" r="50" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+              <circle cx="55" cy="55" r="44" fill="none" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="2 2"/>
+              <text font-family="Geist Mono" font-size="7" fill="var(--accent)" letter-spacing="3">
+                <textPath href="#circle-path" startOffset="0">· VOUCHA · NOTARISED · VOUCHA · NOTARISED ·</textPath>
+              </text>
+              <g transform="translate(55, 55)">
+                <path d="M -14 0 L -4 10 L 14 -10" stroke="var(--accent)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <text y="22" font-family="Instrument Serif" font-size="10" fill="var(--accent)" text-anchor="middle" font-style="italic">94 / 100</text>
+              </g>
+            </svg>
+          </div>
+
+          <div class="dial-foot">
+            <div class="df-item"><b>Decision</b><span class="ok">Verified</span></div>
+            <div class="df-item"><b>Anomalies</b><span class="warn">1 · low severity</span></div>
+            <div class="df-item"><b>Confidence</b><span>97.8%</span></div>
+            <div class="df-item"><b>Inference</b><span>1.83s · 29 checks</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Document <em>preview</em></h2>
+          <span class="badge">3 anomaly overlays · click to inspect</span>
+        </div>
+        <div class="doc-preview-wrap">
+          <div class="doc-paper">
+            <div class="dp-head"><span>UNIVERSITY OF LAGOS · AKOKA</span><span>№ FCS / 2023 / 04812</span></div>
+            <div class="dp-title">Bachelor of Science</div>
+            <div class="dp-name">Adaeze<br>Okonkwo</div>
+            <div class="dp-body">Having satisfied the conditions prescribed by the Senate of the University, was admitted into the degree of Bachelor of Science with First Class Honours in Computer Science.</div>
+            <div class="dp-fields">
+              <div class="dp-field"><b>Programme</b>Computer Science</div>
+              <div class="dp-field"><b>Class</b>First Class Honours</div>
+              <div class="dp-field"><b>Conferred</b>14 Oct 2023</div>
+              <div class="dp-field"><b>Matric № </b>149074</div>
+            </div>
+            <div class="doc-seal"></div>
+            <div class="dp-foot"><span>Registrar · O. Adesanya</span><span>VC · Prof. F. Ogundipe</span></div>
+          </div>
+
+          <div class="overlay" data-id="1" data-target="r1" style="top: 6%; left: 32%; width: 26%; height: 6%;"></div>
+          <div class="overlay danger" data-id="2" data-target="r2" style="top: 56%; left: 8%; width: 18%; height: 4%;"></div>
+          <div class="overlay ok" data-id="3" data-target="r3" style="top: 72%; right: 8%; width: 22%; height: 22%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-right">
+
+      <div class="card">
+        <div class="card-head">
+          <h2>The <em>reasoning</em></h2>
+          <span class="badge">3 of 29 checks surfaced</span>
+        </div>
+        <div class="reasoning-list">
+          <div class="reasoning" id="r1" data-target="1">
+            <div class="r-num">1</div>
+            <div class="r-body">
+              <div class="r-title">Registry serial № matches UNILAG record</div>
+              <div class="r-detail">Serial FCS/2023/04812 was cross-checked against the UNILAG conferral registry. Subject name, programme, and conferral date all match the anchor record from 14 Oct 2023.</div>
+              <div class="r-meta"><span>Check · <b>registry.unilag.anchor</b></span><span>Confidence · <b>99.4%</b></span></div>
+            </div>
+          </div>
+          <div class="reasoning danger" id="r2" data-target="2">
+            <div class="r-num">2</div>
+            <div class="r-body">
+              <div class="r-title">Metadata trail shows re-save in Adobe Acrobat DC</div>
+              <div class="r-detail">PDF was re-saved on 8 Jan 2024 — 86 days after original conferral. This is common for transcript requests but flagged because the re-save tool stripped the original creation timestamp. Anchor data still matches; severity downgraded to low.</div>
+              <div class="r-meta"><span>Check · <b>meta.trail</b></span><span>Severity · <b>Low</b></span></div>
+            </div>
+          </div>
+          <div class="reasoning ok" id="r3" data-target="3">
+            <div class="r-num">3</div>
+            <div class="r-body">
+              <div class="r-title">Embossed seal authentic · UNILAG crest v3</div>
+              <div class="r-detail">Concentric ring count, embossment depth, and ink saturation match the UNILAG seal die in use since 2019. Cross-validated against 8,420 seals from the same cohort.</div>
+              <div class="r-meta"><span>Check · <b>vision.seal_detect</b></span><span>Confidence · <b>99.9%</b></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Market <em>context</em></h2>
+          <span class="badge">UNILAG · CSC · 2023 cohort</span>
+        </div>
+        <p style="font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin-bottom: 6px;">This document's anchor fingerprint sits squarely inside the cohort distribution — strong evidence of authenticity beyond the individual record check.</p>
+        <div class="market-chart">
+          <svg viewBox="0 0 600 160" preserveAspectRatio="none">
+            <line class="mk-grid" x1="0" x2="600" y1="40" y2="40"/>
+            <line class="mk-grid" x1="0" x2="600" y1="80" y2="80"/>
+            <line class="mk-grid" x1="0" x2="600" y1="120" y2="120"/>
+            <path class="mk-band" d="M 0,90 C 100,70 200,40 300,30 C 400,40 500,80 600,100 L 600,160 L 0,160 Z"/>
+            <path class="mk-line" d="M 0,110 C 100,90 200,52 300,42 C 400,52 500,92 600,118"/>
+            <line class="mk-mean" x1="0" x2="600" y1="50" y2="50"/>
+            <text x="8" y="46" font-family="Geist Mono" font-size="9" fill="#6B7280">μ cohort score = 91.4</text>
+            <circle class="mk-dot" cx="300" cy="42" r="6"/>
+            <text x="312" y="38" font-family="Geist Mono" font-size="10" fill="#0A0E1A">this doc · 94</text>
+            <text x="6" y="156" font-family="Geist Mono" font-size="8.5" fill="#9CA3AF">JAN</text>
+            <text x="146" y="156" font-family="Geist Mono" font-size="8.5" fill="#9CA3AF">APR</text>
+            <text x="290" y="156" font-family="Geist Mono" font-size="8.5" fill="#9CA3AF">OCT — conferral</text>
+            <text x="498" y="156" font-family="Geist Mono" font-size="8.5" fill="#9CA3AF">DEC</text>
+          </svg>
+        </div>
+        <div class="market-meta">
+          <div class="mm-item"><b>Cohort size</b><span>1,184 docs</span></div>
+          <div class="mm-item"><b>Cohort μ</b><span>91.4</span></div>
+          <div class="mm-item"><b>This score</b><span class="ok">94 · top tertile</span></div>
+          <div class="mm-item"><b>Outliers</b><span>14 · 1.2%</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 22px;">
+        <div class="card-head" style="margin-bottom: 14px;">
+          <h2 style="font-size: 18px;">Audit &amp; <em>action</em></h2>
+          <span class="badge">Retained 7 yrs</span>
+        </div>
+        <div class="actions">
+          <a class="action-prim" href="settlement.html">
+            <span>Settle &amp; issue Voucha seal</span>
+            <small>₦1,250 · Squad</small>
+          </a>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+          <button class="btn">Request re-review</button>
+          <button class="btn">Mark as suspect</button>
+          <button class="btn">Open audit log</button>
+          <button class="btn">Send to applicant</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const toggles = document.querySelectorAll('#accent-toggle button');
+  toggles.forEach(t => t.addEventListener('click', () => {
+    toggles.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.body.classList.toggle('cobalt', t.dataset.mode === 'cobalt');
+  }));
+
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', () => {
+      const id = o.dataset.target;
+      document.querySelectorAll('.overlay').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.reasoning').forEach(x => x.classList.remove('active'));
+      o.classList.add('active');
+      const r = document.getElementById(id);
+      if (r) r.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.reasoning').forEach(r => {
+    r.addEventListener('click', () => {
+      const id = r.dataset.target;
+      document.querySelectorAll('.overlay').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.reasoning').forEach(x => x.classList.remove('active'));
+      r.classList.add('active');
+      const o = document.querySelector('.overlay[data-id="' + id + '"]');
+      if (o) o.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

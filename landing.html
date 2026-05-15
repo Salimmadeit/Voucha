@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voucha — Verified once. Trusted forever.</title>
+<style>
+  :root {
+    --paper-1: #F2F4F7;
+    --paper-2: #FFFFFF;
+    --ink: #0A0E1A;
+    --ink-2: #1F2937;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --border: #E5E7EB;
+    --border-strong: #D1D5DB;
+    --surface: #FFFFFF;
+    --gold: #C9A961;
+    --gold-deep: #A8893F;
+    --cobalt: #1E3A8A;
+    --cobalt-bright: #2563EB;
+    --success: #059669;
+    --font-display: 'Iowan Old Style', 'Charter', 'Source Serif Pro', Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    background: linear-gradient(180deg, #F2F4F7 0%, #FFFFFF 30%, #F2F4F7 100%);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01","cv11","tnum";
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  .kicker { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+  a { color: inherit; }
+
+  /* NAV */
+  nav.top {
+    position: sticky; top: 16px; z-index: 50;
+    margin: 16px auto 0;
+    max-width: 1180px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 18px 10px 22px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mark { display: flex; align-items: center; gap: 10px; }
+  .seal { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-size: 16px; }
+  .wordmark { font-family: var(--font-display); font-size: 19px; letter-spacing: -0.01em; }
+  nav.top .nav-links { display: flex; gap: 28px; }
+  nav.top .nav-links a { font-size: 13.5px; color: var(--ink-2); text-decoration: none; }
+  nav.top .nav-links a:hover { color: var(--ink); }
+  nav.top .actions { display: flex; gap: 10px; align-items: center; }
+  .btn { font-size: 13.5px; padding: 9px 16px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; transition: all .2s; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+  .btn.ghost { color: var(--ink); border-color: var(--border); background: transparent; }
+  .btn.ghost:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn.primary:hover { background: var(--cobalt); border-color: var(--cobalt); }
+
+  /* HERO */
+  .hero { padding: 96px 0 64px; position: relative; }
+  .hero .crumb { display: inline-flex; gap: 10px; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,0.6); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); }
+  .hero .crumb .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--success); position: relative; }
+  .hero .crumb .pulse::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid var(--success); opacity: 0.5; animation: ring 2s ease-out infinite; }
+  @keyframes ring { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(56px, 8.6vw, 116px); line-height: 0.98; letter-spacing: -0.025em; margin-top: 26px; max-width: 1100px; }
+  h1 em { font-style: italic; color: var(--cobalt); }
+  h1 .gold { font-style: italic; color: var(--gold-deep); }
+  .hero p.lede { font-size: 19px; line-height: 1.55; color: var(--ink-2); max-width: 600px; margin-top: 32px; }
+
+  /* Audience segmented tabs */
+  .seg {
+    margin-top: 44px;
+    display: inline-flex;
+    padding: 5px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    gap: 4px;
+  }
+  .seg button {
+    font-family: inherit; cursor: pointer;
+    border: 0; background: transparent;
+    padding: 9px 18px; border-radius: 999px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    transition: all .25s;
+  }
+  .seg button[aria-selected="true"] {
+    background: var(--ink); color: #fff;
+  }
+  .seg button[data-seg="grads"][aria-selected="true"] { background: var(--cobalt); }
+  .seg button[data-seg="institutions"][aria-selected="true"] { background: var(--gold-deep); }
+
+  .panels { margin-top: 32px; position: relative; }
+  .panel { display: none; }
+  .panel[data-active] { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; }
+  .panel .copy h2 { font-family: var(--font-display); font-weight: 400; font-size: 38px; line-height: 1.1; letter-spacing: -0.015em; }
+  .panel .copy p { color: var(--muted); font-size: 16px; line-height: 1.6; margin-top: 18px; max-width: 480px; }
+  .panel .cta-row { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+
+  /* Hero device — the scanning beam mockup */
+  .device {
+    position: relative;
+    aspect-ratio: 5 / 4;
+    border-radius: 18px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0 30px 60px -40px rgba(10,14,26,0.25);
+  }
+  .device::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(from var(--angle), transparent 0deg, transparent 50deg, rgba(201,169,97,0.7) 110deg, rgba(30,58,138,0.7) 200deg, transparent 280deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: rot 9s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes rot { to { --angle: 360deg; } }
+  .device-inner {
+    position: relative;
+    height: 100%;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 22px;
+  }
+  .doc {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 18px, rgba(10,14,26,0.04) 18px 19px),
+      linear-gradient(180deg, #FAFAF7 0%, #FFFFFF 100%);
+    padding: 26px 22px;
+    overflow: hidden;
+  }
+  .doc::after { content: ''; position: absolute; left: 0; right: 0; height: 36px; background: linear-gradient(180deg, transparent, rgba(201,169,97,0.18) 45%, rgba(201,169,97,0.55) 50%, rgba(201,169,97,0.18) 55%, transparent); top: -36px; filter: blur(2px); animation: scan 4.2s ease-in-out infinite; mix-blend-mode: multiply; }
+  @keyframes scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(420%); } }
+  .doc .stamp-circle { position: absolute; right: 18px; bottom: 22px; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid var(--gold-deep); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; color: var(--gold-deep); font-size: 14px; opacity: 0.7; }
+  .doc h4 { font-family: var(--font-display); font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .doc .row { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); letter-spacing: 0.05em; }
+  .doc .name { font-family: var(--font-display); font-size: 22px; margin-top: 14px; letter-spacing: -0.01em; }
+  .doc .grade { font-size: 11px; color: var(--muted-2); margin-top: 3px; letter-spacing: 0.05em; }
+  .panel-right {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .label-pop {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    color: var(--ink-2);
+    animation: pop 4s ease-in-out infinite;
+    opacity: 0;
+  }
+  .label-pop:nth-child(1) { animation-delay: 0s; }
+  .label-pop:nth-child(2) { animation-delay: 0.4s; }
+  .label-pop:nth-child(3) { animation-delay: 0.8s; }
+  .label-pop:nth-child(4) { animation-delay: 1.2s; }
+  @keyframes pop {
+    0%, 5% { opacity: 0; transform: translateX(8px); }
+    12%, 80% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(0); }
+  }
+  .label-pop .tick { width: 14px; height: 14px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; color: #fff; font-size: 8px; }
+  .score-mini { margin-top: auto; padding: 18px; background: var(--ink); color: #fff; border-radius: 12px; display: flex; align-items: center; gap: 18px; }
+  .score-mini svg { flex: 0 0 56px; }
+  .score-mini .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; color: rgba(255,255,255,0.5); }
+  .score-mini .val { font-family: var(--font-display); font-size: 26px; line-height: 1; margin-top: 4px; }
+  .score-mini .sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+  /* PARTNER ROW */
+  .partners { padding: 56px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-top: 56px; }
+  .partners .row { display: grid; grid-template-columns: auto 1fr; gap: 56px; align-items: center; }
+  .partners .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); max-width: 200px; line-height: 1.55; }
+  .partners .logos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 36px; align-items: center; }
+  .partners .logo { font-family: var(--font-display); font-style: italic; font-size: 22px; color: var(--ink-2); opacity: 0.55; transition: opacity .2s; letter-spacing: -0.01em; text-align: center; }
+  .partners .logo:hover { opacity: 1; }
+  .partners .logo.sans { font-family: var(--font-body); font-style: normal; font-weight: 600; font-size: 17px; letter-spacing: 0.04em; }
+
+  /* PILLARS */
+  .section { padding: 120px 0; }
+  .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: end; margin-bottom: 56px; }
+  .section-head h2 { font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
+  .section-head h2 em { font-style: italic; color: var(--cobalt); }
+  .section-head p { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 460px; justify-self: end; }
+  .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .pillar {
+    position: relative;
+    padding: 28px;
+    border-radius: 16px;
+    background: var(--surface);
+    min-height: 280px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .pillar::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--angle), transparent 0deg, rgba(201,169,97,0.0) 40deg, rgba(201,169,97,0.65) 130deg, rgba(30,58,138,0.65) 220deg, rgba(201,169,97,0.0) 310deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: rot 14s linear infinite;
+    pointer-events: none;
+  }
+  .pillar:nth-child(2)::before { animation-duration: 17s; animation-direction: reverse; }
+  .pillar:nth-child(3)::before { animation-duration: 12s; }
+  .pillar:nth-child(4)::before { animation-duration: 19s; animation-direction: reverse; }
+  .pillar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px solid var(--border); pointer-events: none; }
+  .pillar .roman { font-family: var(--font-display); font-style: italic; font-size: 22px; color: var(--gold-deep); }
+  .pillar h3 { font-family: var(--font-display); font-size: 24px; line-height: 1.2; font-weight: 400; letter-spacing: -0.01em; margin-top: 14px; }
+  .pillar p { color: var(--muted); font-size: 13.5px; line-height: 1.6; margin-top: 12px; }
+  .pillar .icon { width: 36px; height: 36px; margin-top: auto; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; position: relative; }
+  .step { position: relative; padding: 32px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; min-height: 220px; }
+  .step .num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; color: var(--gold-deep); }
+  .step h4 { font-family: var(--font-display); font-size: 22px; margin-top: 14px; font-weight: 400; letter-spacing: -0.01em; }
+  .step p { color: var(--muted); font-size: 13.5px; line-height: 1.6; margin-top: 12px; }
+  .step .meta-line { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-2); display: flex; justify-content: space-between; }
+
+  /* PRICING */
+  .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 56px; }
+  .price-card { padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; position: relative; }
+  .price-card.featured { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .price-card .name { font-family: var(--font-display); font-size: 22px; font-weight: 400; letter-spacing: -0.01em; }
+  .price-card .amount { font-family: var(--font-display); font-size: 56px; line-height: 1; margin-top: 24px; font-weight: 400; letter-spacing: -0.02em; }
+  .price-card .amount sup { font-size: 18px; vertical-align: top; position: relative; top: 14px; opacity: 0.7; font-family: var(--font-body); margin-right: 2px; }
+  .price-card .period { font-size: 13px; opacity: 0.7; margin-top: 6px; }
+  .price-card ul { list-style: none; margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .price-card li { font-size: 13.5px; padding-left: 22px; position: relative; line-height: 1.5; }
+  .price-card li::before { content: '✓'; position: absolute; left: 0; top: 0; color: var(--gold); font-size: 13px; }
+  .price-card.featured li::before { color: var(--gold); }
+  .price-card .pbtn { display: block; margin-top: 32px; padding: 13px; text-align: center; border-radius: 10px; font-size: 13.5px; cursor: pointer; border: 1px solid; text-decoration: none; font-family: inherit; }
+  .price-card:not(.featured) .pbtn { border-color: var(--ink); color: var(--ink); }
+  .price-card.featured .pbtn { background: var(--gold); color: #0A0E1A; border-color: var(--gold); }
+  .price-card .ribbon { position: absolute; top: 18px; right: 18px; padding: 4px 10px; border-radius: 999px; background: rgba(201,169,97,0.18); color: var(--gold-deep); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .price-card.featured .ribbon { background: rgba(201,169,97,0.22); color: var(--gold); }
+
+  /* IMPACT TICKER */
+  .ticker { margin-top: 96px; padding: 22px 0; background: var(--ink); color: #fff; overflow: hidden; position: relative; }
+  .ticker::before, .ticker::after { content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 2; pointer-events: none; }
+  .ticker::before { left: 0; background: linear-gradient(90deg, var(--ink), transparent); }
+  .ticker::after { right: 0; background: linear-gradient(270deg, var(--ink), transparent); }
+  .ticker-track { display: flex; gap: 64px; white-space: nowrap; animation: tick 38s linear infinite; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .ticker-item { display: inline-flex; align-items: center; gap: 14px; font-family: var(--font-display); font-style: italic; font-size: 22px; }
+  .ticker-item span.lbl { font-family: var(--font-mono); font-style: normal; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+  .ticker-item span.val { color: var(--gold); font-style: normal; font-family: var(--font-body); font-weight: 600; }
+
+  /* CTA */
+  .cta { margin: 0; padding: 120px 0; text-align: center; }
+  .cta h2 { font-family: var(--font-display); font-size: clamp(48px, 6vw, 88px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
+  .cta h2 em { font-style: italic; color: var(--gold-deep); }
+  .cta p { color: var(--muted); font-size: 17px; max-width: 540px; margin: 24px auto 0; line-height: 1.55; }
+  .cta-buttons { margin-top: 36px; display: inline-flex; gap: 12px; }
+
+  /* FOOTER */
+  footer.site { border-top: 1px solid var(--border); padding: 56px 0 40px; }
+  footer.site .cols { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 56px; }
+  footer.site h5 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+  footer.site ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  footer.site a { text-decoration: none; font-size: 14px; color: var(--ink-2); }
+  footer.site a:hover { color: var(--ink); }
+  footer.site .colophon { font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 320px; }
+  footer.site .bottom { display: flex; justify-content: space-between; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  @media (max-width: 980px) {
+    .panel[data-active] { grid-template-columns: 1fr; gap: 36px; }
+    .pillars, .steps, .pricing { grid-template-columns: 1fr 1fr; }
+    .section-head { grid-template-columns: 1fr; }
+    .section-head p { justify-self: start; }
+    nav.top .nav-links { display: none; }
+    .partners .row { grid-template-columns: 1fr; gap: 24px; }
+    .partners .logos { grid-template-columns: repeat(3, 1fr); }
+    footer.site .cols { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .pillars, .steps, .pricing { grid-template-columns: 1fr; }
+    .device-inner { grid-template-columns: 1fr; }
+    h1 { font-size: 56px; }
+    footer.site .cols { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top">
+    <a class="mark" href="index.html" style="text-decoration:none">
+      <div class="seal">V</div>
+      <div class="wordmark">Voucha</div>
+    </a>
+    <div class="nav-links">
+      <a href="#pillars">Pillars</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="upload.html">Verify a credential</a>
+      <a class="btn primary" href="#cta">Get started</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="crumb"><span class="pulse"></span>Live · 12,418 credentials verified this week</span>
+    <h1>Verified once. <em>Trusted</em> forever.<br>The integrity layer for <span class="gold">Nigerian</span> credentials.</h1>
+    <p class="lede">Voucha is a digital notary. AI reads the certificate, verifies the institutional seal, and Squad settles the verification fee — all in under nine seconds. Trust, on tap.</p>
+
+    <div class="seg" role="tablist" aria-label="Choose audience">
+      <button data-seg="verifiers" aria-selected="true">For verifiers</button>
+      <button data-seg="grads">For graduates</button>
+      <button data-seg="institutions">For institutions</button>
+    </div>
+
+    <div class="panels">
+      <!-- Verifiers -->
+      <div class="panel" data-panel="verifiers" data-active>
+        <div class="copy">
+          <h2>Stop trusting paper. Start trusting proof.</h2>
+          <p>HR teams, recruiters, embassies, and lenders verify a Nigerian credential in eight seconds for ₦1,250 — not three weeks for ₦15,000. Every verification ships with the institutional source and an audit-ready receipt.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="upload.html">Run a verification</a>
+            <a class="btn ghost" href="dashboard.html">See the dashboard</a>
+          </div>
+        </div>
+        <div class="device" aria-hidden="true">
+          <div class="device-inner">
+            <div class="doc">
+              <div class="row"><span>WEST AFRICAN EXAMINATIONS COUNCIL</span><span>2018/SC/0184201</span></div>
+              <h4>Senior School Certificate</h4>
+              <div class="name">Adaeze Chinonso Okafor</div>
+              <div class="grade">9 SUBJECTS · A1 B2 A1 B3 A1 B2 A1 A1 C4</div>
+              <div class="stamp-circle">SEAL</div>
+            </div>
+            <div class="panel-right">
+              <div class="label-pop"><div class="tick">✓</div>Metadata extracted</div>
+              <div class="label-pop"><div class="tick">✓</div>Seal authenticity verified</div>
+              <div class="label-pop"><div class="tick">✓</div>Cross-referenced WAEC registry</div>
+              <div class="label-pop"><div class="tick">✓</div>Score: 96 of 100</div>
+              <div class="score-mini">
+                <svg viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="5"/>
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="#C9A961" stroke-width="5" stroke-linecap="round" stroke-dasharray="130 138" transform="rotate(-90 28 28)"/>
+                </svg>
+                <div>
+                  <div class="lbl">Integrity Score</div>
+                  <div class="val">96 / 100</div>
+                  <div class="sub">Confidence: institutionally verified</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graduates -->
+      <div class="panel" data-panel="grads">
+        <div class="copy">
+          <h2>Your credentials. Your locker. Free.</h2>
+          <p>Upload your WAEC, NECO, JAMB, university transcript and NYSC discharge once. Voucha turns them into shareable verification links — no more chasing certified copies, no more waiting on registrars.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="upload.html">Build my locker</a>
+            <a class="btn ghost" href="#how">How it works</a>
+          </div>
+        </div>
+        <div class="device">
+          <div class="device-inner">
+            <div class="doc">
+              <div class="row"><span>UNIVERSITY OF LAGOS</span><span>MAT/15/CSC/0421</span></div>
+              <h4>Bachelor of Science, Computer Science</h4>
+              <div class="name">Tolulope J. Adebayo</div>
+              <div class="grade">SECOND CLASS HONOURS · UPPER DIVISION · CGPA 4.21 / 5.00</div>
+              <div class="stamp-circle">UNILAG</div>
+            </div>
+            <div class="panel-right">
+              <div class="label-pop"><div class="tick">✓</div>Locker created</div>
+              <div class="label-pop"><div class="tick">✓</div>Share link generated</div>
+              <div class="label-pop"><div class="tick">✓</div>Recipient: Andela Talent</div>
+              <div class="label-pop"><div class="tick">✓</div>Verified · 00:00:08</div>
+              <div class="score-mini" style="background:#1E3A8A">
+                <svg viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="5"/>
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="#C9A961" stroke-width="5" stroke-linecap="round" stroke-dasharray="138 138" transform="rotate(-90 28 28)"/>
+                </svg>
+                <div>
+                  <div class="lbl">Locker Status</div>
+                  <div class="val">7 credentials</div>
+                  <div class="sub">3 verified · 4 awaiting institution sync</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Institutions -->
+      <div class="panel" data-panel="institutions">
+        <div class="copy">
+          <h2>Become a source of truth — and earn from it.</h2>
+          <p>Universities, examination councils, and professional bodies plug into Voucha once. Each verified lookup pays a transparent ₦850 institution fee — without changing your registrar workflow or exposing your database.</p>
+          <div class="cta-row">
+            <a class="btn primary" href="settlement.html">Partner with us</a>
+            <a class="btn ghost" href="#pricing">Revenue model</a>
+          </div>
+        </div>
+        <div class="device">
+          <div class="device-inner">
+            <div class="doc">
+              <div class="row"><span>NATIONAL YOUTH SERVICE CORPS</span><span>2022 / BAT / 2541</span></div>
+              <h4>Certificate of National Service</h4>
+              <div class="name">Ibrahim Musa Bello</div>
+              <div class="grade">BATCH B · BAYELSA STATE · COMPLETED 2022-11-04</div>
+              <div class="stamp-circle">NYSC</div>
+            </div>
+            <div class="panel-right">
+              <div class="label-pop"><div class="tick">✓</div>Lookup request received</div>
+              <div class="label-pop"><div class="tick">✓</div>Match found · registrar API</div>
+              <div class="label-pop"><div class="tick">✓</div>Fee credited: ₦850</div>
+              <div class="label-pop"><div class="tick">✓</div>Audit log written</div>
+              <div class="score-mini" style="background:#A8893F">
+                <svg viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="5"/>
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-dasharray="124 138" transform="rotate(-90 28 28)"/>
+                </svg>
+                <div>
+                  <div class="lbl">Institution Revenue</div>
+                  <div class="val">₦4,182,500</div>
+                  <div class="sub">May 2026 · 4,921 verifications</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="partners">
+    <div class="row">
+      <div class="label">Trusted as a verification source by Nigeria's credentialing infrastructure.</div>
+      <div class="logos">
+        <div class="logo sans">WAEC</div>
+        <div class="logo sans">JAMB</div>
+        <div class="logo sans">NYSC</div>
+        <div class="logo">University&nbsp;of&nbsp;Lagos</div>
+        <div class="logo">Covenant</div>
+        <div class="logo sans">NUC</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLARS -->
+  <section class="section" id="pillars">
+    <div class="section-head">
+      <h2>Four pillars hold up<br>every <em>verification.</em></h2>
+      <p>Voucha is built on the Squad Hackathon's pillars — AI automation, financial innovation, data, and impact — and every screen makes one of them visible to the user.</p>
+    </div>
+    <div class="pillars">
+      <article class="pillar">
+        <div class="roman">I.</div>
+        <h3>AI Automation</h3>
+        <p>OCR + seal vision + signature pattern matching reads each certificate in 2.4 seconds. Reasoning strings ship with every result — no opaque black box.</p>
+        <svg class="icon" viewBox="0 0 36 36" fill="none">
+          <rect x="6" y="6" width="24" height="24" rx="4" stroke="#0A0E1A" stroke-width="1.2"/>
+          <circle cx="18" cy="18" r="6" stroke="#C9A961" stroke-width="1.4"/>
+          <circle cx="18" cy="18" r="2" fill="#0A0E1A"/>
+        </svg>
+      </article>
+      <article class="pillar">
+        <div class="roman">II.</div>
+        <h3>Financial Innovation</h3>
+        <p>Squad APIs power per-verification micropayments. A ₦1,250 fee replaces ₦12k+ legal/registrar costs, with transparent splits paid to the source institution.</p>
+        <svg class="icon" viewBox="0 0 36 36" fill="none">
+          <rect x="5" y="10" width="26" height="18" rx="2" stroke="#0A0E1A" stroke-width="1.2"/>
+          <line x1="5" y1="16" x2="31" y2="16" stroke="#0A0E1A" stroke-width="1.2"/>
+          <rect x="8" y="20" width="8" height="3" fill="#C9A961"/>
+        </svg>
+      </article>
+      <article class="pillar">
+        <div class="roman">III.</div>
+        <h3>Use of Data</h3>
+        <p>Every verification trains the next. Market-context pattern recognition compares this certificate against thousands from the same year and institution.</p>
+        <svg class="icon" viewBox="0 0 36 36" fill="none">
+          <polyline points="6,28 12,20 18,24 24,12 30,16" stroke="#1E3A8A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="12" cy="20" r="1.6" fill="#0A0E1A"/>
+          <circle cx="18" cy="24" r="1.6" fill="#0A0E1A"/>
+          <circle cx="24" cy="12" r="1.6" fill="#0A0E1A"/>
+        </svg>
+      </article>
+      <article class="pillar">
+        <div class="roman">IV.</div>
+        <h3>Impact Potential</h3>
+        <p>Credential fraud costs Nigeria an estimated ₦400 B / year. Every Voucha verification routes a transparent share back to the source institution.</p>
+        <svg class="icon" viewBox="0 0 36 36" fill="none">
+          <path d="M18 5 L22 14 L31 15 L24 21 L26 30 L18 25 L10 30 L12 21 L5 15 L14 14 Z" stroke="#0A0E1A" stroke-width="1.2" fill="none"/>
+          <path d="M18 5 L22 14 L31 15 L24 21" fill="#C9A961" opacity="0.4"/>
+        </svg>
+      </article>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how" style="padding-top: 24px;">
+    <div class="section-head">
+      <h2>Eight seconds.<br>Three honest <em>steps.</em></h2>
+      <p>No waiting on registrars. No emailing PDFs. No notary. Drag the certificate, see the score, pay if you trust it — or walk away if you don't.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">STEP 01 · 0:00 → 0:02</div>
+        <h4>Drop the certificate.</h4>
+        <p>WAEC scratch card, university transcript PDF, NYSC discharge, professional license — Voucha accepts JPG, PNG, PDF up to 20 MB. The scanning beam reads it in real time.</p>
+        <div class="meta-line"><span>OCR · ON-DEVICE</span><span>0.6s</span></div>
+      </div>
+      <div class="step">
+        <div class="num">STEP 02 · 0:02 → 0:07</div>
+        <h4>See the integrity score.</h4>
+        <p>One monochromatic dial. One number from 0 to 100. Click any highlighted anomaly to see the reasoning — font drift, seal mismatch, date pattern outlier.</p>
+        <div class="meta-line"><span>AI · REASONING SHIPPED</span><span>3.8s</span></div>
+      </div>
+      <div class="step">
+        <div class="num">STEP 03 · 0:07 → 0:08</div>
+        <h4>Settle with Squad.</h4>
+        <p>One-tap verify. ₦1,250 splits transparently: ₦400 infrastructure, ₦850 to the source institution. You get an audit-ready receipt and a permalink.</p>
+        <div class="meta-line"><span>SQUAD · LIVE SETTLEMENT</span><span>1.2s</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section" id="pricing" style="padding-top: 24px;">
+    <div class="section-head">
+      <h2>Honest pricing,<br>no per-seat <em>nonsense.</em></h2>
+      <p>You pay per verified credential. Graduates store their own credentials free, forever. Institutions earn on every lookup against their seal.</p>
+    </div>
+    <div class="pricing">
+      <div class="price-card">
+        <div class="ribbon">Graduates</div>
+        <div class="name">Locker</div>
+        <div class="amount"><sup>₦</sup>0<span style="font-size:18px; opacity:0.5; font-family:var(--font-body)">/forever</span></div>
+        <div class="period">Free for individuals storing their own credentials.</div>
+        <ul>
+          <li>Unlimited credential storage</li>
+          <li>Shareable verification links</li>
+          <li>Time-bound recipient access</li>
+          <li>Lifetime audit log</li>
+        </ul>
+        <a class="pbtn" href="upload.html">Open my locker</a>
+      </div>
+      <div class="price-card featured">
+        <div class="ribbon">Most popular</div>
+        <div class="name">Per Verification</div>
+        <div class="amount"><sup>₦</sup>1,250<span style="font-size:18px; opacity:0.6; font-family:var(--font-body)">/check</span></div>
+        <div class="period">For employers, lenders, embassies, recruiters.</div>
+        <ul>
+          <li>AI + institutional cross-reference</li>
+          <li>Audit-ready PDF receipt</li>
+          <li>Transparent fee split shown to the user</li>
+          <li>Volume rebate from 500 / month</li>
+        </ul>
+        <a class="pbtn" href="settlement.html">Verify your first one</a>
+      </div>
+      <div class="price-card">
+        <div class="ribbon">Institutions</div>
+        <div class="name">Source Partner</div>
+        <div class="amount"><sup>₦</sup>850<span style="font-size:18px; opacity:0.5; font-family:var(--font-body)">/lookup earned</span></div>
+        <div class="period">Voucha pays you for every verification of your seal.</div>
+        <ul>
+          <li>Registrar API or batch sync</li>
+          <li>Monthly Squad-settled payout</li>
+          <li>Branded verification permalink</li>
+          <li>Fraud-attempt alerts</li>
+        </ul>
+        <a class="pbtn" href="#cta">Become a source</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <div class="ticker-item"><span class="lbl">Today's economic value protected</span><span class="val">₦184,720,500</span></div>
+    <div class="ticker-item"><span class="lbl">Credentials verified this month</span><span class="val">52,418</span></div>
+    <div class="ticker-item"><span class="lbl">Institutions onboarded</span><span class="val">23</span></div>
+    <div class="ticker-item"><span class="lbl">Fraud attempts blocked, Q2</span><span class="val">1,082</span></div>
+    <div class="ticker-item"><span class="lbl">Median verification time</span><span class="val">8.2 sec</span></div>
+    <div class="ticker-item"><span class="lbl">Source institutions paid out</span><span class="val">₦44.6M</span></div>
+    <div class="ticker-item"><span class="lbl">Today's economic value protected</span><span class="val">₦184,720,500</span></div>
+    <div class="ticker-item"><span class="lbl">Credentials verified this month</span><span class="val">52,418</span></div>
+    <div class="ticker-item"><span class="lbl">Institutions onboarded</span><span class="val">23</span></div>
+    <div class="ticker-item"><span class="lbl">Fraud attempts blocked, Q2</span><span class="val">1,082</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="cta" id="cta">
+    <span class="kicker">Squad Hackathon · 2026</span>
+    <h2>Trust isn't paperwork.<br>It's <em>infrastructure.</em></h2>
+    <p>Be the first verifier, the first university, or the first graduate on Voucha. We launch the public verification network on June 14.</p>
+    <div class="cta-buttons">
+      <a class="btn primary" href="upload.html">Run a verification</a>
+      <a class="btn ghost" href="dashboard.html">View dashboard</a>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="cols">
+      <div>
+        <div class="mark" style="margin-bottom: 18px;">
+          <div class="seal">V</div>
+          <div class="wordmark">Voucha</div>
+        </div>
+        <p class="colophon">The integrity layer for Nigerian education. Built on Squad for the 2026 hackathon. Lagos · Abuja · Ibadan.</p>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <ul>
+          <li><a href="upload.html">Verify</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="trust-score.html">Trust Score</a></li>
+          <li><a href="settlement.html">Settlement</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Sources</h5>
+        <ul>
+          <li><a href="#">WAEC integration</a></li>
+          <li><a href="#">JAMB integration</a></li>
+          <li><a href="#">NYSC integration</a></li>
+          <li><a href="#">University partners</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#">Manifesto</a></li>
+          <li><a href="#">Security</a></li>
+          <li><a href="#">Squad partnership</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 Voucha · Trust Infrastructure Ltd.</span>
+      <span>RC 1729841 · Lagos, Nigeria</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Audience segmented control
+  const tabs = document.querySelectorAll('.seg button');
+  const panels = document.querySelectorAll('.panel');
+  tabs.forEach(btn => btn.addEventListener('click', () => {
+    const target = btn.dataset.seg;
+    tabs.forEach(b => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+    panels.forEach(p => {
+      if (p.dataset.panel === target) p.setAttribute('data-active', '');
+      else p.removeAttribute('data-active');
+    });
+  }));
+</script>
+</body>
+</html>
